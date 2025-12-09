@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ibnsina AI Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+    <!-- Add these AFTER your existing CSS links, BEFORE your style.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" media="(prefers-color-scheme: light)">
+    
+    <!-- Add this style tag for immediate fixes -->
+    <style>
+        /* Immediate fix for input textarea */
+        #userInput {
+            width: 100%;
+            min-height: 40px;
+            max-height: 150px;
+            resize: vertical;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            padding: 10px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: border-color 0.3s, box-shadow 0.3s;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            box-sizing: border-box;
+        }
+        
+        #userInput:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+        
+        /* Fix for chat messages display */
+        .message-body {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            line-height: 1.6;
+            padding: 12px 16px;
+            border-radius: 16px;
+            background: var(--bg-secondary);
+            max-width: 100%;
+            overflow: hidden;
+        }
+        
+        .message.user .message-body {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        /* Ensure code in input is visible */
+        .input-with-icons {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            width: 100%;
+        }
+        
+        /* Fix for buttons alignment with textarea */
+        .input-icons {
+            display: flex;
+            gap: 5px;
+            align-items: flex-start;
+            padding-top: 5px;
+        }
+        
+        /* Better scrollbar for textarea */
+        #userInput::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #userInput::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+        
+        #userInput::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+        
+        #userInput::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-hover);
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Header Buttons -->
+    <div class="mobile-header">
+        <button class="mobile-menu-btn" id="leftDrawerBtn" aria-label="Open left menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <div class="mobile-logo">
+            <i class="fas fa-brain"></i>
+            <span>Ibnsina AI</span>
+            <p class="tagline">you can still chat with me if i die 🪶</p>
+        </div>
+        
+        <div class="theme-toggle mobile-theme-toggle" id="mobileThemeToggle" aria-label="Toggle theme">
+            <i class="fas fa-moon"></i>
+            <i class="fas fa-sun"></i>
+        </div>
+        
+        <button class="mobile-menu-btn" id="rightDrawerBtn" aria-label="Open right menu">
+            <i class="fas fa-user"></i>
+        </button>
+    </div>
+    
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1>Ibnsina AI</h1>
+                        <p class="tagline">you can still chat with me if i die 🪶</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <div class="status">
+                    <div class="pulse"></div>
+                    <span>Online</span>
+                </div>
+                <div class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                    <i class="fas fa-moon"></i>
+                    <i class="fas fa-sun"></i>
+                </div>
+                <div class="user-avatar" id="userAvatar" aria-label="Open profile">
+                    <i class="fas fa-user"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Sidebar -->
+            <div class="sidebar" id="leftSidebar">
+                <div class="drawer-header">
+                    <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                    <button class="drawer-close" id="leftDrawerClose" aria-label="Close left menu">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="sidebar-section">
+                    <div class="quick-grid">
+                        <button class="quick-btn" id="quickNews" data-action="news" aria-label="Get news">
+                            <i class="fas fa-newspaper"></i>
+                            <span>News</span>
+                        </button>
+                        <button class="quick-btn" id="quickWeather" data-action="weather" aria-label="Get weather">
+                            <i class="fas fa-cloud-sun"></i>
+                            <span>Weather</span>
+                        </button>
+                        <button class="quick-btn" id="quickTime" data-action="time" aria-label="Get current time">
+                            <i class="fas fa-clock"></i>
+                            <span>Time</span>
+                        </button>
+                        <button class="quick-btn" id="quickJoke" data-action="joke" aria-label="Tell a joke">
+                            <i class="fas fa-laugh"></i>
+                            <span>Joke</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-rocket"></i> Features</h3>
+                    <div class="features-list">
+                        <div class="feature-item">
+                            <i class="fas fa-comment-alt"></i>
+                            <span>Smart Chat</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-cloud"></i>
+                            <span>Live Weather</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-newspaper"></i>
+                            <span>News Updates</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-code"></i>
+                            <span>Code Help</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-microphone-alt"></i>
+                            <span>Problem analysis</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-cog"></i>
+                            <span>System Control</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="weather-card">
+                    <h3><i class="fas fa-map-marker-alt"></i> Current Weather</h3>
+                    <div class="weather-info" id="weatherInfo">
+                        <div class="loading">Loading weather...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Area -->
+            <div class="chat-area">
+                <div class="chat-header">
+                    <h2><i class="fas fa-comments"></i> Chat with Ibnsina</h2>
+                    <p class="chat-subtitle">Try: <code>news</code> • <code>weather</code> • <code>open youtube</code> • <code>tell me a joke</code></p>
+                </div>
+
+                <!-- Messages Container -->
+                <div class="messages-container" id="messages">
+                    <!-- Welcome Message -->
+                    <div class="message ai welcome-message">
+                        <div class="avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="message-content">
+                            <div class="message-header">
+                                <strong>Ibnsina AI</strong>
+                                <span class="time">Just now</span>
+                                <button class="copy-btn" aria-label="Copy message">
+                                    <i class="far fa-copy"></i>
+                                </button>
+                            </div>
+                            <div class="message-body">
+                                <p>👋 Hello! I'm <strong>Ibnsina</strong>, your intelligent assistant!</p>
+                                <p>I can help you with:</p>
+                                <ul>
+                                    <li>🌤️ Weather updates for any city</li>
+                                    <li>📰 Latest news headlines</li>
+                                    <li>💻 Code examples and help</li>
+                                    <li>🎵 Opening apps and websites</li>
+                                    <li>🎤 Voice commands</li>
+                                    <li>And much more!</li>
+                                </ul>
+                                <p>How can I assist you today?</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="input-area">
+                    <div class="input-container">
+                        <!-- Image Preview -->
+                        <div class="image-preview-container" id="imagePreviewContainer" style="display: none;">
+                            <div class="image-preview">
+                                <img id="previewImage" alt="Preview">
+                                <button class="preview-remove" id="removeImageBtn" aria-label="Remove image">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                <div class="preview-info">
+                                    <span id="previewFileName">Image.jpg</span>
+                                    <span id="previewFileSize">0 KB</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Upload Progress -->
+                        <div class="upload-progress" id="uploadProgress" style="display: none;">
+                            <div class="progress-text">Uploading...</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="input-with-icons">
+                            <!-- Image Upload Button -->
+                            <div class="image-upload-btn">
+                                <label for="chatImageUpload" class="icon-btn" title="Upload Image (Ctrl+I)" id="imageUploadLabel">
+                                    <i class="fas fa-image"></i>
+                                </label>
+                                <input type="file" 
+                                       id="chatImageUpload" 
+                                       accept="image/*,.jpg,.jpeg,.png,.gif,.webp,.bmp" 
+                                       style="display: none;">
+                            </div>
+                            
+                            <!-- CHANGED: Input to Textarea -->
+                            <textarea 
+                                id="userInput" 
+                                placeholder="Type your message or upload an image for analysis..." 
+                                autocomplete="off"
+                                autofocus
+                                aria-label="Type your message"
+                                rows="1"
+                                style="resize: none; overflow-y: hidden;"
+                            ></textarea>
+                            
+                            <div class="input-icons">
+                                <button class="icon-btn" id="voiceBtn" title="Voice Command" aria-label="Voice command">
+                                    <i class="fas fa-microphone"></i>
+                                </button>
+                                <button class="icon-btn send-btn" id="sendBtn" title="Send Message" aria-label="Send message">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="input-hints">
+                            <div class="hint">
+                                <i class="fas fa-lightbulb"></i>
+                                <span>Try: <em>"weather of dhaka"</em>, <em>"open chrome"</em>, <em>"upload images for analysis"</em>, "touch textbox to copy"</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar -->
+            <div class="right-sidebar" id="rightSidebar">
+                <div class="drawer-header">
+                    <h3><i class="fas fa-user-circle"></i> Profile</h3>
+                    <button class="drawer-close" id="rightDrawerClose" aria-label="Close right menu">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <!-- Simple Image Display Card -->
+                <div class="image-display-card">
+                    <div class="image-header">
+                        <i class="fas fa-user-circle"></i>
+                        <h3>Ibnsina Himel</h3>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="{{ url_for('static', filename='images/my-photo.jpg') }}" 
+                             alt="Ibnsina" 
+                             class="full-image"
+                             id="mainImage"
+                             onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"%23f1f5f9\"/><text x=\"50\" y=\"50\" font-family=\"Arial\" font-size=\"14\" fill=\"%2364748b\" text-anchor=\"middle\" dy=\".3em\">Profile</text></svg>'">
+                    </div>
+                    
+                    <div class="image-caption">
+                        <p><button id="profileLinkBtn">tap here for more</button></p>
+                    </div>
+                </div>
+
+                <!-- Recent Commands -->
+                <div class="recent-commands">
+                    <h3><i class="fas fa-history"></i> Recent Commands</h3>
+                    <div class="commands-list" id="recentCommands">
+                        <div class="command-item">Say "hello" to start!</div>
+                    </div>
+                </div>
+
+                <!-- Tip Card -->
+                <div class="tip-card">
+                    <h3><i class="fas fa-info-circle"></i> Pro Tip</h3>
+                    <p>You can ask for weather of any city like: <code>"weather of london"</code> or <code>"dhaka weather"</code></p>
+                    <p>Note: <code>I don't have a database for now, so I can't keep previous conversations</code></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <span>© 2025 Ibnsina AI Assistant</span>
+                    <span class="divider">•</span>
+                    <span> <i class="fas fa-heart"></i></span>
+                </div>
+                <div class="footer-right">
+                    <button class="footer-btn" id="clearChatBtn" aria-label="Clear chat">
+                        <i class="fas fa-trash"></i> Clear Chat
+                    </button>
+                    <button class="footer-btn" id="fullscreenBtn" aria-label="Toggle fullscreen">
+                        <i class="fas fa-expand"></i> Fullscreen
+                    </button>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Overlay for mobile drawers -->
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+
+    <!-- Profile Modal -->
+    <div class="modal" id="profileModal">
+        <div class="modal-content profile-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-circle"></i> My Profile</h3>
+                <button class="modal-close" id="profileModalClose" aria-label="Close profile modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Profile content will be loaded here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p>Ibnsina is thinking...</p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    
+    <!-- Add this script for textarea auto-resize and better handling -->
+    <script>
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            const userInput = document.getElementById('userInput');
+            const sendBtn = document.getElementById('sendBtn');
+            
+            if (userInput) {
+                // Auto-resize textarea as user types
+                userInput.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = (this.scrollHeight) + 'px';
+                    
+                    // Limit max height to 150px
+                    if (this.scrollHeight > 150) {
+                        this.style.height = '150px';
+                        this.style.overflowY = 'scroll';
+                    } else {
+                        this.style.overflowY = 'hidden';
+                    }
+                });
+                
+                // Handle Enter key (send) and Shift+Enter (new line)
+                userInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        if (typeof sendMessage === 'function') {
+                            sendMessage();
+                        }
+                    }
+                    
+                    // Ctrl+Enter also sends
+                    if (e.key === 'Enter' && e.ctrlKey) {
+                        e.preventDefault();
+                        if (typeof sendMessage === 'function') {
+                            sendMessage();
+                        }
+                    }
+                });
+                
+                // Clear textarea height when sending
+                const originalSendMessage = window.sendMessage;
+                window.sendMessage = function() {
+                    if (originalSendMessage) {
+                        originalSendMessage();
+                    }
+                    
+                    // Reset textarea after sending
+                    if (userInput.value.trim() === '') {
+                        userInput.style.height = 'auto';
+                        userInput.style.overflowY = 'hidden';
+                    }
+                };
+            }
+            
+            // Add better copy functionality for code blocks
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.code-copy-btn')) {
+                    const codeBlock = e.target.closest('pre').querySelector('code');
+                    const textToCopy = codeBlock.textContent;
+                    
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        // Visual feedback
+                        const btn = e.target.closest('.code-copy-btn');
+                        const originalHTML = btn.innerHTML;
+                        btn.innerHTML = '<i class="fas fa-check"></i>';
+                        btn.style.color = '#10b981';
+                        
+                        setTimeout(() => {
+                            btn.innerHTML = originalHTML;
+                            btn.style.color = '';
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Copy failed:', err);
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
